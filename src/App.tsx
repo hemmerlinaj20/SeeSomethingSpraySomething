@@ -5,7 +5,7 @@ import { SignIn, Profile, Documentation, SaveLoad, CreateAccount, ResetPassword 
 import { NavLink, Link } from "react-router";
 import { useState, useEffect } from "react";
 import { Models } from './utility/models';
-import { useParams } from 'react-router';
+import { useParams, useNavigate} from 'react-router';
 import { createProjectMap } from './utility/ProjectUtilities.ts';
 import { UtilityInterfaces } from "./utility/models";
 import { saveProject } from "./utility/ProjectUtilities";
@@ -38,24 +38,50 @@ export default function App({parameters, owned, projects}: AppProps) {
   
   useEffect(() => {
     async function loadMap(){
-      const loadedMap = await createProjectMap(1, Number(pid));
-      setParameterMap(loadedMap);
-      changeParameterList();
+      if(pid){
+        const loadedMap = await createProjectMap(1, Number(pid));
+      await setParameterMap(loadedMap);
+      changeParameterList(loadedMap);
+      for(const [key, value] of loadedMap){
+        const inputElement: HTMLInputElement|null = document.querySelector("#" + key + "_input");
+        if(inputElement){
+          inputElement.defaultValue = String(value.value);
+        }   
+      }
+      }
+      else{
+        for(const [key, value] of parameterMap){
+          const inputElement: HTMLInputElement|null = document.querySelector("#" + key + "_input");
+          if(inputElement){
+            inputElement.defaultValue = String(value.value);
+          }   
+        }
+      }
     }
     loadMap();
-  })
+  }, [pid])
 
   function loadProject(params: Map<string, UtilityInterfaces.Parameter>){
     setParameterMap(params);
-    changeParameterList();
+    for(const [key, value] of params){
+      const inputElement: HTMLInputElement|null = document.querySelector("#" + key + "_input");
+      if(inputElement){
+        inputElement.defaultValue = String(value.value);
+      }   
+    }
   }
-
+  const navigate = useNavigate();
+  async function save(){
+    await saveProject(1, parameterMap)
+    navigate('/results/'+getOrException(parameterMap, "project_id").value);
+  }
+  
   //Construct a list of the parameters and the values given
   //to App.tsx as props
   //parameterList is the list of HTML elements that are rendered in the drawers for
   //each parameter. it may be desirable to make a separate list for each drawer.
-  let parameterList: any[] = [];  
-  changeParameterList();   
+  let parameterList: any[] = []; 
+  changeParameterList(parameterMap);  
   const parameterInputs: NodeListOf<HTMLInputElement> = document.querySelectorAll(".parameter_input");
   for(const parameterInput of parameterInputs){
     parameterInput.addEventListener("change", () => {
@@ -73,23 +99,20 @@ export default function App({parameters, owned, projects}: AppProps) {
         }
         currentParameter.value = newVal;
         setParameterMap(parameterMap.set(key, currentParameter));
-        changeParameterList();
+        parameterInput.value = String(newVal);
       }
     });
   }
   
-  //Replaces parameterList with the current values of parameterMap
-  //TODO: make another function that only replaces the value actually changed,
-  //so replacing parameters would be o(1) instead of o(n)
-  function changeParameterList(){
+  function changeParameterList(tempMap: Map<string, UtilityInterfaces.Parameter>){
     parameterList = [];
-    for(const [key, value] of parameterMap){
+    for(const [key, value] of tempMap){
       //Make a text input field for string parameters
       if(value.type==UtilityInterfaces.types.STRING){
         parameterList.push(
           <li id={key + "_list"} key={key}>
             <p>{key}</p>
-            <input className="parameter_input" id={key + "_input"} type="text" defaultValue={value.value}></input>
+            <input className="parameter_input" id={key + "_input"} type="text"></input>
           </li>
         );
       }
@@ -98,12 +121,13 @@ export default function App({parameters, owned, projects}: AppProps) {
         parameterList.push(
           <li id={key + "_list"} key={key}>
             <p>{key}</p>
-            <input className="parameter_input" id={key + "_input"} type="number" defaultValue={value.value}></input>
+            <input className="parameter_input" id={key + "_input"} type="number"></input>
           </li>
         );
       }
     }
   }
+
 // ParameterList Indexes
 // 0 = Duty Cycle, 1 = Fluid Pressure , 2 = Last Date Modified, 3= Line Speed, 4= Line Width, 5= Nozzle Count, 
 // 6 = Nozzle Height, 7 = Nozzle Spacing, 8 = Owner ID, 9 = Product Height, 10 = Product Length,
@@ -195,9 +219,7 @@ export default function App({parameters, owned, projects}: AppProps) {
       {/* THIS DIV IS FOR THE BUTTON TO SEE THE RESULTS */}
       <div id='results'>
         {/* RESULTS */}
-        <Link to={"/results/"+getOrException(parameterMap, "project_id").value}>
-          <button> See Results </button>
-        </Link>
+          <button onClick={save}> See Results </button>
       </div>
     </div>
   );
