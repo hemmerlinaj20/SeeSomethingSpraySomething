@@ -33,7 +33,7 @@ def get_users():
 
 def get_user_by_id(user_id):
     try:
-        user = db.Users.find_one({'_id': user_id}, {'pass_hash':0})
+        user = db.Users.find_one({'_id': user_id})
         return user
     except Exception as e:
         return e

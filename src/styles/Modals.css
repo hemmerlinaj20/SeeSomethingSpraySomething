@@ -37,6 +37,12 @@
     padding: 0px;
     margin: 0px;
   }
+
+  #saves_container{
+    overflow-y: auto;
+    height: 200px;
+    margin-top: 10px;
+  }
   
   .infomodal {
     padding: 20px;
@@ -193,6 +199,7 @@
     padding: 11px 28px;
     border-radius: 8px;
     font-size: 0.8rem;
+    margin-right: 10px;
     border: none;
     color: #fff;
     background: #ff3e4e;
@@ -251,4 +258,37 @@
 
   .TextField {
     padding: 25px 25px;
+  }
+
+  .saves_delete_inactive {
+    background: #ffcbd0;
+  }
+
+  .saves_open_inactive {
+    color: gray;
+  }
+
+  .saves_save_button {
+    background-color: rgb(196, 255, 202);
+    margin-right: 10px;
+  }
+
+  .saves_project_button {
+    background-color: rgb(231, 231, 231);
+    border-radius: 3px;
+    margin-bottom: 5px;
+    margin-left: 5px;
+  }
+
+  .saves_selected_project {
+    background-color: rgb(203, 203, 203);
+  }
+
+  .save_load_header {
+    display:flex;
+    #rename_project{
+      margin-left: 10px;
+      height: 50%;
+      align-self: center;
+    }
   }

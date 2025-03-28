@@ -70,6 +70,15 @@ def api_post_new_project(user_id):
 		"user": user
     })
 
+@api_v1.route('/users/<int:user_id>/copy', methods=['GET', 'POST'])
+def api_post_copy_project(user_id):
+    project = request.get_json()
+    user = save_new_project(user_id, project['data'])
+    return jsonify({
+        "retrieved": datetime.now(timezone.utc).isoformat(),
+		"user": user
+    })
+
 @api_v1.route('/users/<int:user_id>/run', methods=['POST'])
 def api_post_run(user_id):
     project = request.get_json()
