@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import React from 'react';
 import "./styles/Drawer.css";
 import autoCalculateTiming from "./App.tsx";
@@ -105,11 +106,6 @@ export const ControllerDrawer = ({
   const classNames = `Drawer ${direction} ${
     isOpen ? 'Open' : ''
   }`;
-  const [isChecked, setIsChecked] = React.useState(false);
-  if (isChecked){
-    console.log("checked")
-    autoCalculateTiming
-  }
 
   return (
     <aside
@@ -117,7 +113,7 @@ export const ControllerDrawer = ({
     aria-labelledby="controller-drawer-title"
     aria-hidden={!isOpen}>
     <div className={classNames}>
-      <h2 id="controller-drawer-title">Controller Settings<Checkbox checked = {isChecked} onChange={setIsChecked}/>
+      <h2 id="controller-drawer-title">Controller Settings
       </h2>
       <div className='Close' onClick={onClose} aria-label="Close Line Drawer">
         X
@@ -133,3 +129,12 @@ export const ControllerDrawer = ({
     </aside>
   );
 };
+
+//function getTextWidth(text, font) {
+//  const canvas = document.createElement('canvas');
+//  const context = canvas.getContext('2d');
+//
+//  context.font = font || getComputedStyle(document.body).font;
+//
+//  return context.measureText(text).width;
+//}

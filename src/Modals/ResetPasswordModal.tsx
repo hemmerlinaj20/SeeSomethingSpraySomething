@@ -12,7 +12,7 @@ export const ResetPassword = ({isOpen, setIsOpen, setIsFSOpen, setIsCAOpen, setI
         setEmail(newEm);}
 
     async function tryToReset(){
-      await resetPassword(email);
+      resetPassword(email);
       setIsOpen(false);
     }
 if (!isOpen){ return null}
@@ -33,7 +33,7 @@ if (!isOpen){ return null}
               </div>
              </div>
            </div>
-           <button className= "forgetBtn" onClick={() => {tryToReset; setIsOpen(false); setIsFSOpen(true); setIsCAOpen(false); setIsLIOpen(false)}}>
+           <button className= "forgetBtn" onClick={() => {tryToReset(); setIsOpen(false); setIsFSOpen(true); setIsCAOpen(false); setIsLIOpen(false)}}>
                   Recover Password
             </button>
 

@@ -16,6 +16,9 @@ import '../styles/Modals.css';
       if (selectedNozzle) {
         window.open(`${baseUrl}${selectedNozzle.replace("/", "-")}`, "_blank")
       }
+      else {
+        window.open(`https://portal.spray.com/en-us`)
+      }
     }
 
     const handleControllerClick = () => {
@@ -23,6 +26,9 @@ import '../styles/Modals.css';
       const endUrl = "-spray-controller"
       if (selectedController) {
         window.open(`${baseUrl}${selectedController.replace("E", "").replace("+", "")}${endUrl}`, "_blank")
+      }
+      else {
+        window.open(`https://portal.spray.com/en-us`)
       }
     }
 
@@ -47,6 +53,9 @@ import '../styles/Modals.css';
     } catch (error) {
       console.error("Error Loading Controllers", error)
     }
+  }
+
+  async function GenerateInfo() {
   }
   useEffect(() => {
     if (isOpen){
@@ -75,6 +84,10 @@ import '../styles/Modals.css';
               <Dropdown options={controllerOptions} onChange={(value) => setSelectedController(value)}/>
                 <button className= "CancelBtn" onClick={handleControllerClick}>
                 →
+                </button>
+
+                <button className= "CancelBtn" onClick={GenerateInfo}>
+                Generate Project Info
                 </button>
               </div>
           </div>

@@ -1,23 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import './styles/App.css';
 import { NozzleDrawer, LineDrawer, ControllerDrawer } from './Drawers.tsx';
-import { SignIn } from './Modals/SignInModal.tsx'
-import { Documentation } from './Modals/DocumentationModal.tsx'
-import { SaveLoad } from './Modals/SaveLoadModal.tsx'
+import { Parameter, paraNames, paraUnits, paramDesc} from'./Parameter.tsx';
+import { nozzleIndex, nozzleSpacing, lineIndex, lineSpacing, controllerIndex, controllerSpacing } from './Parameter.tsx';
+import { SignIn } from './modals/SignInModal.tsx'
+import { Documentation } from './modals/DocumentationModal.tsx'
+import { SaveLoad } from './modals/SaveLoadModal.tsx'
+import { Wizard } from './modals/WizardModal.tsx'
 import { CreateAccount, Profile } from './Modals.tsx'
-import { ResetPassword, ResetPasswordConfirm } from './Modals/ResetPasswordModal.tsx'
-import { Info } from './Modals/InfoModal.tsx'
+import { ResetPassword, ResetPasswordConfirm } from './modals/ResetPasswordModal.tsx'
+import { Info } from './modals/InfoModal.tsx'
 import { UserInfoResponse } from './utility/auth_requests.ts';
 import { useState, useEffect, ChangeEvent } from "react";
 import { Models } from './utility/models';
 import { useNavigate} from 'react-router';
+import { Dropdown } from "./modals/ModalUtil.tsx";
+import { Checkbox } from "./Drawers.tsx";
+import { Option } from "./modals/ModalInterfaces.tsx";
 import { UtilityInterfaces } from "./utility/models";
 import { pushRunToDatabase } from './utility/ProjectUtilities.ts';
 import { ParameterConstraints} from './utility/ParameterConstraints.ts';
 import MainScreenVisual from './MainScreenVisual';
 import './utility/auth_requests.ts';
-
-import { getOrException, listUserProjects} from "./utility/ProjectUtilities.ts";
+import { getOrException, listUserProjects} from "./utility/ProjectUtilities.ts"
+import { createNozzleArray, createControllerArray} from "./utility/ProjectUtilities";
+import { Console } from 'console';
+import { isStringObject } from 'util/types';
 
 interface AppProps{
   parameters: [Map<string, UtilityInterfaces.Parameter>, React.Dispatch<React.SetStateAction<Map<string, UtilityInterfaces.Parameter>>>];
@@ -41,9 +49,15 @@ export default function App({parameters, projectState, userIDstate, timingModeSt
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isDocumentationOpen, setIsDocumentationOpen] = useState(false);
   const [isSaveLoadOpen, setIsSaveLoadOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [selectedController, setSelectedController] = useState<string>("");
+  const [controllerOptions, setControllerOptions] = useState<Option[]>([]);
+  const [selectedNozzle, setSelectedNozzle] = useState<string>("");
+  const [nozzleOptions, setNozzleOptions] = useState<Option[]>([]);
+  const [isChecked, setIsChecked] = useState(false);
 
   //Method for transfering info abour selectedId to the Modal
   const handleOpenInfo = (id: number) => {
@@ -55,6 +69,17 @@ export default function App({parameters, projectState, userIDstate, timingModeSt
   const [projectList, setProjectList] = projectState;
   const [parameterMap, setParameterMap] = parameters;
   const [timingMode, setTimingMode] = timingModeState;
+
+      async function loadControllerOptions() {
+        try {
+        const controllerNames = await createControllerArray();
+        if (controllerNames.length > 0) {
+          setControllerOptions(controllerNames.map(name => ({ value: name, label: name})))
+        }
+      } catch (error) {
+        console.error("Error Loading Controllers", error)
+      }
+    }
 
   //When someone logs in, set the userID state and reload the project list
   async function awaitAndSetUserInfo(newInfo : Promise<UserInfoResponse>) {
@@ -103,8 +128,7 @@ export default function App({parameters, projectState, userIDstate, timingModeSt
 
   //Called when the results button is clicked. Not sure why this needs its own function.
   const navigate = useNavigate();
-  async function navigateResults(){
-    await pushRunToDatabase(userID, parameterMap)   
+  function navigateResults(){   
     navigate('/results/');
   }
 
@@ -152,6 +176,14 @@ export default function App({parameters, projectState, userIDstate, timingModeSt
     for(const [key, value] of parameterMap){
       //Make a text input field for string parameters
       if(value.min!=null && value.max!=null){
+        // If the key is Controller Name or Spray Angle, make it a drop down
+        //if(value.name == "controller_name"){
+        //  console.log("Got to Controller")
+        //parameterList.push(
+        // <Dropdown options={controllerOptions} onChange={(value) => setSelectedController(value)}/>
+         // )
+        //}
+        //else {
         parameterList.push(
           <li id={key + "_list"} key={key}>
             <p>{key.replace("_", " ").replace("_", " ").toUpperCase()}</p>
@@ -159,6 +191,12 @@ export default function App({parameters, projectState, userIDstate, timingModeSt
           </li>
         );
       }
+    //}
+    //if(value.name == "spray_angle"){
+    //  parameterList.push(
+    //    <Dropdown options={nozzleOptions} onChange={(value) => setSelectedNozzle(value)}/>
+    //   )
+    //}
       else{
         parameterList.push(
           <li id={key + "_list"} key={key}>
@@ -184,43 +222,71 @@ export default function App({parameters, projectState, userIDstate, timingModeSt
     const stopDelayParam = parameterMap.get("stop_delay");
     const startDelayParam = parameterMap.get("start_delay");
     const sprayDurationParam = parameterMap.get("spray_duration");
-    console.log("function happened")
 
     if (typeof startDelayParam !== "undefined"){
       startDelayParam.value = Number(getOrException(parameterMap, "sensor_distance").value) / LineSpeed;
       setParameterMap(parameterMap.set("start_delay", startDelayParam));
-      console.log(startDelayParam)
     }
     if (typeof stopDelayParam !== "undefined"){
       stopDelayParam.value = Number(getOrException(parameterMap, "sensor_distance").value) / LineSpeed;
       setParameterMap(parameterMap.set("stop_delay", stopDelayParam));
-      console.log(stopDelayParam)
     }
     if (typeof SensorDis !== "undefined" && typeof sprayDurationParam !== "undefined"){
       sprayDurationParam.value = Number(getOrException(parameterMap, "product_length").value) / LineSpeed;
       setParameterMap(parameterMap.set("spray_duration", sprayDurationParam));
-      console.log(sprayDurationParam)
-
     }
+  else{
   }
+}
 
   function updateTimingModeHelper(newTimeMode:string) : void{
     //start_delay should always be visible, so we don't need to do anything to it
     const stopDelayDiv = document.getElementById("stop-delay-div");
     const sprayDurDiv = document.getElementById("spray-duration-div");
-   
+
+    const stopDelayParam = parameterMap.get("stop_delay");
+    const sprayDurationParam = parameterMap.get("spray_duration");
+
+    const lineSpeed = Number(getOrException(parameterMap, "line_speed").value) / 5; //divide by 5 to convert ft/min to in/s
+    
     if(stopDelayDiv !== null && sprayDurDiv !== null){
+      if(typeof sprayDurationParam !== "undefined" && typeof stopDelayParam !== "undefined"){
         if(newTimeMode === "ft"){
           stopDelayDiv.classList.add("grayed-timing-mode");
           sprayDurDiv.classList.remove("grayed-timing-mode");
+     
+          if(newTimeMode !== timingMode){
+            stopDelayParam.value = 0;
+            setParameterMap(parameterMap.set("stop_delay", stopDelayParam));
+
+            sprayDurationParam.value = Number(getOrException(parameterMap, "product_length").value) / lineSpeed;
+            setParameterMap(parameterMap.set("spray_duration", sprayDurationParam));
+          }
         }
         else if(newTimeMode === "vt"){
           stopDelayDiv.classList.remove("grayed-timing-mode");
           sprayDurDiv.classList.add("grayed-timing-mode");
+
+          if(newTimeMode !== timingMode){
+            stopDelayParam.value = Number(getOrException(parameterMap, "sensor_distance").value) / lineSpeed;
+            setParameterMap(parameterMap.set("stop_delay", stopDelayParam));
+            
+            sprayDurationParam.value = 0;
+            setParameterMap(parameterMap.set("spray_duration", sprayDurationParam));
+          }
         }
+
+        const StopDelayInputBox =  document.getElementById("stop_delay_input") as HTMLInputElement;
+        if (StopDelayInputBox !== null) StopDelayInputBox.value = String(stopDelayParam.value);
+
+        const SprayDurationInputBox =  document.getElementById("spray_duration_input") as HTMLInputElement;
+        if (SprayDurationInputBox !== null) SprayDurationInputBox.value = String(sprayDurationParam.value);
 
         setTimingMode(newTimeMode);
         //console.log(`time mode state is now: ${newTimeMode}`);
+      }else{
+        console.error("ERROR: stop delay or spray duration parameter not found");
+      }
     }
     else{
       console.error("ERROR: timing mode div not found");
@@ -240,8 +306,8 @@ export default function App({parameters, projectState, userIDstate, timingModeSt
 // 0 = Duty Cycle, 1 = Fluid Pressure , 2 = Last Date Modified, 3= Line Speed, 4= Line Width, 5= Nozzle Count, 
 // 6 = Nozzle Height, 7 = Nozzle Spacing, 8 = Owner ID, 9 = Product Height, 10 = Product Length,
 // 11 = Product Width, 12 = Project Desc., 13 = Project ID , 14 = Project Name, 15 = Sensor Distance, 
-// 16 = Spray Duration, 17 = Start Delay, 18 = Stop Delay, 19 = Angle, 20 = Flow Rate,
-// 21 = Nozz Doc Link, 22 = Nozzle ID, 23 = Nozzle Name, 24 = Spray Shape, 25 = Twist Angle, 
+// 16 = Spray Duration, 17 = Start Delay, 18 = Stop Delay, 19 = Spray Angle, 20 = Flow Rate,
+// 21 = Nozz Doc Link, 22 = Nozzle ID, 23 = Nozzle Name, 24 = Spray Shape, 25 = Alignment, 
 // 26 = Controller Doc Link, 27 = Controller ID, 28 = Controller Name, 29 = Gun ID, 30 = Gun Name , 31 = Max Frequency
 
 // Reset Password Modal and Forget Password Modal are for testing purposes only, and will be removed once links work correctly
@@ -256,42 +322,13 @@ export default function App({parameters, projectState, userIDstate, timingModeSt
         aria-expanded={isNozzleDrawerOpen}
         aria-controls="nozzleDrawer">Nozzle</button>
         <NozzleDrawer isOpen={isNozzleDrawerOpen} onClose={() => setIsNozzleDrawerOpen(false)}>
-          <div style = {{display: "flex", alignItems: "center", gap: "29px"}}>
-          {parameterList[23]} <button className='info-btn' onClick={() => {handleOpenInfo(23)}}
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Nozzle Name"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "50px"}}>
-          {parameterList[20]} <button className='info-btn' onClick={() => {handleOpenInfo(20)}}
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Flow Rate"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "82px"}}>
-          {parameterList[19]} <button className='info-btn' onClick={() => {handleOpenInfo(19)}}
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Nozzle Angle"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "15px"}}>
-          {parameterList[6]} <button className='info-btn' onClick={() => {handleOpenInfo(6)}}
-                      aria-expanded={isInfoOpen}
-                      aria-controls="Nozzle Height"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "17px"}}>
-          {parameterList[5]} <button className='info-btn' onClick={() => {handleOpenInfo(5)}}
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Nozzle Spacing"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "8px"}}>
-          {parameterList[7]} <button className='info-btn' onClick={() => {handleOpenInfo(7)}}                    
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Nozzle Count"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "15px"}}>
-          {parameterList[1]} <button className='info-btn' onClick={() => {handleOpenInfo(1)}}
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Fluid Pressure"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "35px"}}>
-          {parameterList[25]} <button className='info-btn' onClick={() => {handleOpenInfo(25)}}
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Twist Angle"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "36px"}}>
-          {parameterList[24]} <button className='info-btn' onClick={() => {handleOpenInfo(24)}}
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Spray Shape"></button></div>
+          {/* Spray Angle (19), Nozzle Count (5), Nozzle Height (6), Nozzle Spacing (7), Flow Rate (20), Alignment (25), Fluid Pressure (1) */}
+          <div>
+          {nozzleIndex.map((_) => (
+            <Parameter key = {_} parameterList= {parameterList} paramUnits = {paraUnits} 
+            isInfoOpen = {isInfoOpen} handleOpenInfo = {handleOpenInfo} index = {_} />
+          ))}
+          </div>
         </NozzleDrawer>
 
         {/* LINE DRAWER */}
@@ -299,73 +336,47 @@ export default function App({parameters, projectState, userIDstate, timingModeSt
         aria-expanded={isLineDrawerOpen}
         aria-controls="lineDrawer">Line</button>
         <LineDrawer isOpen={isLineDrawerOpen} onClose={() => setIsLineDrawerOpen(false)}>
-        <div style = {{display: "flex", alignItems: "center", gap: "65px"}}>
-          {parameterList[3]} <button className='info-btn' onClick={() => {handleOpenInfo(3)}}
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Line Speed"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "60px"}}>
-          {parameterList[4]} <button className='info-btn' onClick={() => {handleOpenInfo(4)}}
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Line Width"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "14px"}}>
-          {parameterList[9]} <button className='info-btn' onClick={() => {handleOpenInfo(9)}}                   
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Product Height"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "12px"}}>
-          {parameterList[10]} <button className='info-btn' onClick={() => {handleOpenInfo(10)}}                 
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Product Length"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "20px"}}>
-          {parameterList[11]} <button className='info-btn' onClick={() => {handleOpenInfo(11)}}                    
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Product Width"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "10px"}}>
-          {parameterList[15]} <button className='info-btn' onClick={() => {handleOpenInfo(15)}}                 
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Sensor Distance"></button></div>
+        <div>
+          {lineIndex.map((_) => (
+            <Parameter key = {_} parameterList= {parameterList} paramUnits = {paraUnits} 
+            isInfoOpen = {isInfoOpen} handleOpenInfo = {handleOpenInfo} index = {_} 
+            />
+          ))}
+          </div>
         </LineDrawer>
 
-        {/* CONTROLLER DRAWER */}
-        <button onClick={() => setIsControllerDrawerOpen(true)}
+        {/* CONTROLLER DRAWER */} 
+        <button onClick={() => {setIsControllerDrawerOpen(true); autoCalculateTiming()}}
         aria-expanded={isControllerDrawerOpen}
         aria-controls="controllerDrawer">Controller</button>
         <ControllerDrawer isOpen={isControllerDrawerOpen} onClose={() => setIsControllerDrawerOpen(false)}>
           
           <div>
+            <Checkbox checked = {isChecked} onChange={setIsChecked}/>
             <select value={timingMode} onChange={updateTimingMode}>
               <option key="ft" value="ft">Fixed Time</option>
               <option key="vt" value="vt">Variable Time</option>
             </select>
           </div>
           
-          <div id="start-delay-div" className="visible-timing-mode" style = {{display: "flex", alignItems: "center", gap: "43px"}}>
-          {parameterList[17]} <button className='info-btn' onClick={() => {handleOpenInfo(17)}}                    
+          <div id="start-delay-div" className="visible-timing-mode" style = {{display: "flex", alignItems: "center"}}>
+          {parameterList[17]} {paraUnits[17]} <button className='info-btn' onClick={() => {handleOpenInfo(17)}}                    
                     aria-expanded={isInfoOpen}
                     aria-controls="Start Delay"></button></div>
-          <div id="stop-delay-div" className={`visible-timing-mode ${stopDelayGrayed}`} style = {{display: "flex", alignItems: "center", gap: "48px"}}>
-          {parameterList[18]} <button className='info-btn' onClick={() => {handleOpenInfo(18)}}                    
+          <div id="stop-delay-div" className={`visible-timing-mode ${stopDelayGrayed}`} style = {{display: "flex", alignItems: "center"}}>
+          {parameterList[18]} {paraUnits[18]}<button className='info-btn' onClick={() => {handleOpenInfo(18)}}                    
                     aria-expanded={isInfoOpen}
                     aria-controls="Stop Delay"></button></div>
-          <div id="spray-duration-div" className= {`visible-timing-mode ${sprayDurationGrayed}`} style = {{display: "flex", alignItems: "center", gap: "px"}}>
-          {parameterList[16]} <button className='info-btn' onClick={() => {handleOpenInfo(16)}}                    
+          <div id="spray-duration-div" className= {`visible-timing-mode ${sprayDurationGrayed}`} style = {{display: "flex", alignItems: "center"}}>
+          {parameterList[16]} {paraUnits[16]} <button className='info-btn' onClick={() => {handleOpenInfo(16)}}                    
                     aria-expanded={isInfoOpen}
                     aria-controls="Spray Duration"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "37px"}}>
-          {parameterList[27]} <button className='info-btn' onClick={() => {handleOpenInfo(27)}}                    
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Controller Id"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "11px"}}>
-          {parameterList[28]} <button className='info-btn' onClick={() => {handleOpenInfo(28)}}                    
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Controller Name"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "20px"}}>
-          {parameterList[31]} <button className='info-btn' onClick={() => {handleOpenInfo(31)}}                    
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Max Frequency"></button></div>
-          <div style = {{display: "flex", alignItems: "center", gap: "50px"}}>
-          {parameterList[0]} <button className='info-btn' onClick={() => {handleOpenInfo(0)}}                    
-                    aria-expanded={isInfoOpen}
-                    aria-controls="Duty Cycle"></button></div>
+          <Parameter key = {28} parameterList= {parameterList} paramUnits = {paraUnits} 
+          isInfoOpen = {isInfoOpen} handleOpenInfo = {handleOpenInfo} index = {28} />
+          <Parameter key = {31} parameterList= {parameterList} paramUnits = {paraUnits} 
+          isInfoOpen = {isInfoOpen} handleOpenInfo = {handleOpenInfo} index = {31} />
+          <Parameter key = {0} parameterList= {parameterList} paramUnits = {paraUnits} 
+          isInfoOpen = {isInfoOpen} handleOpenInfo = {handleOpenInfo} index = {0} />
         </ControllerDrawer>
         {isInfoOpen && <Info isOpen = {isInfoOpen} setIsOpen={setIsInfoOpen} selectedId={selectedId}/>}
       </div>
@@ -395,13 +406,15 @@ export default function App({parameters, projectState, userIDstate, timingModeSt
         aria-controls="SaveLoadModal">
           Save Load
         </button>
-        {isSaveLoadOpen && <SaveLoad isOpen = {isSaveLoadOpen} setIsOpen={setIsSaveLoadOpen} projectState={[projectList, setProjectList]} parameterMap={parameterMap} onLoad={loadProject} userIDstate={[userID, setUserID]}/>}
+        {isSaveLoadOpen && <SaveLoad isOpen = {isSaveLoadOpen} setIsOpen={setIsSaveLoadOpen} setIsWizardOpen={setIsWizardOpen} projectState={[projectList, setProjectList]} parameterMap={parameterMap} onLoad={loadProject} userIDstate={[userID, setUserID]}/>}
+        {/*{isWizardOpen && <Wizard isOpen = {isWizardOpen} setIsOpen={setIsWizardOpen} projectState={[projectList, setProjectList]} parameterMap={parameterMap} onLoad={loadProject} userIDstate={[userID, setUserID]}/>} */}
       </div>
 
       {/* THIS DIV IS FOR THE SIMULATION */}
       <div id='sprayModel'>
         {/* PROJECT NAME */}
         <h3 id='projectName'>{getOrException(parameterMap, "project_name").value}</h3>
+        <h3>{userID}</h3>
         {/* 3D MODEL */}
         <MainScreenVisual parameterMap={parameterMap}/>
       </div>

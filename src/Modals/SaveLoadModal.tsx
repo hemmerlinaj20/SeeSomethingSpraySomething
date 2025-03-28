@@ -6,10 +6,10 @@ import { listUserProjects} from "../utility/ProjectUtilities";
 import { createProjectMap} from "../utility/ProjectUtilities";
 import { SaveLoadProps } from "./ModalInterfaces";
 import { getLatestProjectID } from "../utility/ProjectUtilities";
+import { TextField } from "./ModalUtil.tsx";
 import '../styles/Modals.css';
 
-
-  export const SaveLoad = ({ isOpen, setIsOpen, projectState, parameterMap, onLoad, userIDstate}: SaveLoadProps) => {
+  export const SaveLoad = ({ isOpen, setIsOpen, setIsWizardOpen, projectState, parameterMap, onLoad, userIDstate}: SaveLoadProps) => {
     const [selectedButton, setSelectedButton] = useState(-1);
     const [projects, setProjects] = projectState;
     const [projectList, setProjectList] = useState(constructProjectList());
@@ -89,6 +89,9 @@ import '../styles/Modals.css';
             <div id="save_modal_content" className= "modalContent">
               <input id="rename_project" type="text" placeholder={projectName}></input>
             <button onClick={save}>Save Project</button>
+            <button onClick={() => setIsWizardOpen(true)}>
+              New Project
+            </button>
               <div className = 'scrollable-container'>
                 {projectList}
               </div>

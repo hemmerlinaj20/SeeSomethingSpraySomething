@@ -25,6 +25,7 @@ export interface PasswordModalProps extends ModalProps{
 export interface SaveLoadProps{
   isOpen: boolean;
   setIsOpen: (arg0: boolean) => void;
+  setIsWizardOpen: (arg0: boolean) => void;
   projectState : [Models.ProjectBase[], React.Dispatch<React.SetStateAction<Models.ProjectBase[]>>];
   parameterMap: Map<string, UtilityInterfaces.Parameter>;
   onLoad: (arg0: Map<string, UtilityInterfaces.Parameter>) => void;

@@ -176,9 +176,9 @@ function createProjectFromMap(project: Map<string, UtilityInterfaces.Parameter>)
         nozzle_name: String(getOrException(project, "nozzle_name").value),
         nozzle_doc_link: String(getOrException(project, 'nozzle_doc_link').value),
         flow_rate: Number(getOrException(project, 'flow_rate').value),
-        angle: Number(getOrException(project, 'angle').value),
+        spray_angle: Number(getOrException(project, 'spray_angle').value),
         spray_shape: String(getOrException(project, 'spray_shape').value),
-        twist_angle: Number(getOrException(project, 'twist_angle').value)
+        alignment: Number(getOrException(project, 'alignment').value)
     }
     const gun: Models.Gun = {
         gun_id: Number(getOrException(project, 'gun_id').value),
@@ -276,4 +276,5 @@ export function encodeHTML(str: string): string{
         }
     });
 }
+
 

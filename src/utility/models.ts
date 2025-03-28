@@ -10,9 +10,9 @@ export namespace Models{
         nozzle_name:string,
         nozzle_doc_link:string,
         flow_rate:number,
-        angle:number,
+        spray_angle:number,
         spray_shape:string,
-        twist_angle:number
+        alignment:number
     }
     export interface Gun{
         gun_id:number,
