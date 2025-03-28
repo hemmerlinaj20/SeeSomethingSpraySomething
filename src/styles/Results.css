@@ -56,6 +56,36 @@
     font-size: 0.8rem;
 }
 
+.spray-element:hover .tooltiptext{
+    visibility: visible;
+}
+
+.spray-element .tooltiptext{
+    visibility: hidden;
+    z-index: 5;
+
+    width: 120px;
+    height: 3em;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+
+    position: relative;
+    bottom: 6em;
+    left: -60px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+.tooltipP{
+    border:0;
+    margin: 0;
+}
+
 .product-border{
     background-color: black;
 }

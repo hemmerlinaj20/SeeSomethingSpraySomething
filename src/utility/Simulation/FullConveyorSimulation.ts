@@ -1,5 +1,5 @@
 import {UtilityInterfaces} from "../models.ts"
-
+import { toRadians, distance } from "./MathFunctions.ts";
 /* A NOTE ON UNITS AND COORDINATES
 
 all lengths are stored in inches, all times in seconds, and all angles in degrees
@@ -14,16 +14,6 @@ t=0 at the instant the product reaches the sensor
 
 */
 
-//take an angle in degrees and return it in radians
-function toRadians(angleInDegrees : number) : number{
-    return angleInDegrees * Math.PI / 180;
-}
-
-//find the cartesian distance between two points
-function distance(x1:number, y1:number, x2:number, y2:number) : number{
-    return Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
-}
-
 namespace GlobalParams{
     //once this is integrated into the application, these will be acquired from the drawer
     //THESE VALUES SHOULD NOT BE CHANGED OUTSIDE OF THE SETGLOBALPARAMS METHOD
@@ -37,6 +27,8 @@ namespace GlobalParams{
     export let PRODUCT_HEIGHT = 2;
 
     export let NOZZLE_HEIGHT = 6; //in.
+
+    export const WIDTH_ANGLE = 3; //let the spray width be three degrees
 
     export let SPRAY_START_TIME = 1.8; //s
     export let SPRAY_END_TIME = 5.4;
@@ -56,7 +48,7 @@ namespace GlobalParams{
         readonly sprayAngle: number; //should be on the order of 60 degrees
         readonly thicknessAngle: number; //should be on the order of 3 degrees
         readonly twistAngle: number; //should be on the order of 5 degrees
-        readonly flowRate: number; //stored in cubic inches per second
+        readonly flowRate: number; //stored in gallons per second
         readonly yPos: number
 
         constructor(spray_angle:number, thickness_angle:number, twist_angle:number, flowrate_galpermin:number, yPos:number){
@@ -120,7 +112,7 @@ export function updateParams(parameterMap:Map<String, UtilityInterfaces.Paramete
         GlobalParams.NOZZLE_LIST = [];
         for (let i = 0; i < Number(new_nozzle_count.value); i++){
             const this_pos = 0.5 * GlobalParams.LINE_WIDTH + Number(new_nozzle_spacing.value) * (0.5 - 0.5*Number(new_nozzle_count.value) + i);
-            const new_nozzle = new GlobalParams.Nozzle(Number(new_spray_angle.value),3,Number(new_twist_angle.value),Number(new_flow_rate.value),this_pos);//read and replace parameters
+            const new_nozzle = new GlobalParams.Nozzle(Number(new_spray_angle.value),GlobalParams.WIDTH_ANGLE,Number(new_twist_angle.value),Number(new_flow_rate.value),this_pos);//read and replace parameters
             GlobalParams.NOZZLE_LIST.push(new_nozzle);
         }
     }
@@ -239,7 +231,7 @@ class SprayedElement{
     readonly isProduct : boolean;
     readonly yPos: number;
     readonly xOffset: number;
-    private volumeApplied: number;
+    private totalDensityApplied: number; //stored as gal/in^2
 
     public isProductBorder = false;
 
@@ -248,7 +240,7 @@ class SprayedElement{
     constructor(xIndex:number, yIndex:number){
         this.yPos = LocalConstants.ELEMENT_WIDTH*(0.5+yIndex);
         this.xOffset = LocalConstants.INITIAL_X_FRONT - 1*LocalConstants.ELEMENT_LENGTH*(0.5+xIndex);
-        this.volumeApplied = 0;
+        this.totalDensityApplied = 0;
 
         const x_product_front = -1 * GlobalParams.SENSOR_DISTANCE;
         const x_product_back = x_product_front - GlobalParams.PRODUCT_LENGTH;
@@ -259,22 +251,26 @@ class SprayedElement{
     }
 
     //send in the spray density that this element is receiving in units of (gallons of spray)/((square inch of product)*(second))
-    //add that amount of spray to this SprayedElement for one timestep
+    //add that density to this SprayedElement for one timestep
     addSpray(sprayDensity:number){
-        this.volumeApplied += sprayDensity*LocalConstants.TIME_STEP;
+        this.totalDensityApplied += sprayDensity * LocalConstants.TIME_STEP;
     }
 
     zeroSpray(){
-        this.volumeApplied = 0;
+        this.totalDensityApplied = 0;
+    }
+
+    setSpray(newDensity:number){
+        this.totalDensityApplied = newDensity;
     }
 
     //return the spray density on this product element
     getElementSprayDensity() : number{
-        return this.volumeApplied / LocalConstants.ELEMENT_AREA;
+        return this.totalDensityApplied;
     }
 
     toString():string{
-        return `SprayedElement:(${this.xOffset},${this.yPos})`
+        return `SprayedElement:(${this.getElementSprayDensity()})`
     }
 }
 
@@ -414,6 +410,7 @@ class SprayPattern{
         if(aa_radius > 0){
             this.pattern = this.antiAliasing(this.pattern, aa_radius);
         }
+        this.pattern = this.normalizeDensities(this.pattern);
     }
 
     private removeFalseOverspray(p : SprayedElement[][]) : SprayedElement[][]{
@@ -444,39 +441,69 @@ class SprayPattern{
         //loop through the display array
         for(let iCol = 0; iCol < p.length; iCol++){
             for(let iRow = 0; iRow < p[iCol].length; iRow++){
-                    let spraySum = 0;
-                    let cellCount = 0;
-                    //look at adjacent columns to our current element
-                    for(let cOffset = -1 * radius; cOffset <= radius; cOffset++){
-                        //if the column index is in bounds
-                        if(iCol + cOffset >= 0 && iCol + cOffset < p.length){
-                            //look at adjacent rows
-                            for(let rOffset = -1 * radius; rOffset <= radius; rOffset++){
-                                //if the row index is in bounds
-                                if(iRow + rOffset >= 0 && iRow + rOffset < p[iCol + cOffset].length){
-                                    //if the elements we're comparing are both on/off the product
-                                    if(p[iCol][iRow].isProduct === p[iCol + cOffset][iRow + rOffset].isProduct){
-                                        spraySum += p[iCol + cOffset][iRow + rOffset].getElementSprayDensity();
-                                        cellCount += 1;
-                                    }
+                let spraySum = 0;
+                let cellCount = 0;
+                //look at adjacent columns to our current element
+                for(let cOffset = -1 * radius; cOffset <= radius; cOffset++){
+                    //if the column index is in bounds
+                    if(iCol + cOffset >= 0 && iCol + cOffset < p.length){
+                        //look at adjacent rows
+                        for(let rOffset = -1 * radius; rOffset <= radius; rOffset++){
+                            //if the row index is in bounds
+                            if(iRow + rOffset >= 0 && iRow + rOffset < p[iCol + cOffset].length){
+                                //if the elements we're comparing are both on/off the product
+                                if(p[iCol][iRow].isProduct === p[iCol + cOffset][iRow + rOffset].isProduct){
+                                    spraySum += p[iCol + cOffset][iRow + rOffset].getElementSprayDensity();
+                                    cellCount += 1;
                                 }
                             }
                         }
                     }
-                    const avgSpray = spraySum / cellCount;
-                    p2[iCol][iRow].addSpray(avgSpray);
                 }
+                const avgSpray = spraySum / cellCount;
+                p2[iCol][iRow].setSpray(avgSpray);
             }
-            return p2;
         }
+        return p2;
     }
+
+    //I don't know whether it's primarily floating point errors or missing time steps, but the total
+    //spray output is always far less than it should be.
+    //I wish I could find the root of the problem, but this method will fix it as I can.
+    private normalizeDensities(p : SprayedElement[][]) : SprayedElement[][]{
+        const p2 = InitializeConveyorArray();
+        
+        //the true total volume applied is active seconds (duration * duty cycle) * flow rate (gal/second) for each nozzle * number of nozzles
+        const trueTotalGallons = GlobalParams.SPRAY_DURATION * GlobalParams.DUTY_CYCLE * GlobalParams.NOZZLE_LIST[0].flowRate * GlobalParams.NOZZLE_LIST.length;
+    
+        let totalDensity = 0;
+        for(let row of p){
+            for(let elem of row){
+                totalDensity += elem.getElementSprayDensity();
+            }
+        }
+        const patternArea = GlobalParams.VIRTUAL_LINE_LENGTH * GlobalParams.LINE_WIDTH;
+        const oneElemArea = patternArea / (LocalConstants.NUM_LENGTH_ELEMENTS * LocalConstants.NUM_WIDTH_ELEMENTS);
+        const calculatedTotalGallons = totalDensity * oneElemArea;
+
+        const normalizationRatio = trueTotalGallons / calculatedTotalGallons;
+
+        for(let colI = 0; colI < p.length; colI++){
+            for(let rowI = 0; rowI < p[colI].length; rowI++){
+                const calcDensity = p[colI][rowI].getElementSprayDensity();
+                const trueDensity = calcDensity * normalizationRatio;
+                p2[colI][rowI].setSpray( trueDensity );
+            }
+        }
+        return p2;
+    }
+}
 
 export function getPatternDimensions() : [number, number] {
     const patternLength = GlobalParams.VIRTUAL_LINE_LENGTH;
     const patternWidth = GlobalParams.LINE_WIDTH; 
     return [patternLength, patternWidth];
 }
-
 
 //BE SURE TO CALL UPDATE_PARAMS BEFORE CALLING THIS METHOD
 export function computeSprayPattern(numLengthElements:number, numWidthElements:number, timeStep:number, anti_aliasing_radius:number) : SprayPattern{

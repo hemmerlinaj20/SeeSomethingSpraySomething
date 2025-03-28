@@ -22,10 +22,10 @@ import { pushRunToDatabase } from './utility/ProjectUtilities.ts';
 import { ParameterConstraints} from './utility/ParameterConstraints.ts';
 import MainScreenVisual from './MainScreenVisual';
 import './utility/auth_requests.ts';
-import { getOrException, listUserProjects} from "./utility/ProjectUtilities.ts"
-import { createNozzleArray, createControllerArray} from "./utility/ProjectUtilities";
-import { Console } from 'console';
-import { isStringObject } from 'util/types';
+
+import { getOrException, listUserProjects} from "./utility/ProjectUtilities.ts";
+import { flowRateEstimate, overlapPercentage } from './utility/Simulation/MathFunctions.ts';
+import { getFontEmbedCSS } from 'html-to-image';
 
 interface AppProps{
   parameters: [Map<string, UtilityInterfaces.Parameter>, React.Dispatch<React.SetStateAction<Map<string, UtilityInterfaces.Parameter>>>];
@@ -302,6 +302,24 @@ export default function App({parameters, projectState, userIDstate, timingModeSt
     stopDelayGrayed = "grayed-timing-mode";
   }
 
+  //calculate projected flowrate
+  const flowrate = Number(getOrException(parameterMap, "flow_rate").value);
+  const pressure = Number(getOrException(parameterMap, "fluid_pressure").value)
+  const basePressure = 40;
+  const estimatedFlowrate = flowRateEstimate(flowrate, basePressure, pressure);
+
+  //calculate overlap %
+  const product_height = Number(getOrException(parameterMap, "product_height").value);
+  const nozzle_height = Number(getOrException(parameterMap, "nozzle_height").value);
+  const spray_height = nozzle_height - product_height;
+  
+  const twist_angle = Number(getOrException(parameterMap, "twist_angle").value);
+  const nozzle_angle = Number(getOrException(parameterMap, "angle").value);
+
+  const nozzle_spacing = Number(getOrException(parameterMap, "nozzle_spacing").value);
+
+  const overlap = overlapPercentage(spray_height, nozzle_spacing, nozzle_angle, twist_angle);
+
 // ParameterList Indexes
 // 0 = Duty Cycle, 1 = Fluid Pressure , 2 = Last Date Modified, 3= Line Speed, 4= Line Width, 5= Nozzle Count, 
 // 6 = Nozzle Height, 7 = Nozzle Spacing, 8 = Owner ID, 9 = Product Height, 10 = Product Length,
@@ -322,13 +340,44 @@ export default function App({parameters, projectState, userIDstate, timingModeSt
         aria-expanded={isNozzleDrawerOpen}
         aria-controls="nozzleDrawer">Nozzle</button>
         <NozzleDrawer isOpen={isNozzleDrawerOpen} onClose={() => setIsNozzleDrawerOpen(false)}>
-          {/* Spray Angle (19), Nozzle Count (5), Nozzle Height (6), Nozzle Spacing (7), Flow Rate (20), Alignment (25), Fluid Pressure (1) */}
-          <div>
-          {nozzleIndex.map((_) => (
-            <Parameter key = {_} parameterList= {parameterList} paramUnits = {paraUnits} 
-            isInfoOpen = {isInfoOpen} handleOpenInfo = {handleOpenInfo} index = {_} />
-          ))}
-          </div>
+          <div style = {{display: "flex", alignItems: "center", gap: "29px"}}>
+          {parameterList[23]} <button className='info-btn' onClick={() => {handleOpenInfo(23)}}
+                    aria-expanded={isInfoOpen}
+                    aria-controls="Nozzle Name"></button></div>
+          <div style = {{display: "flex", alignItems: "center", gap: "50px"}}>
+          {parameterList[20]} <button className='info-btn' onClick={() => {handleOpenInfo(20)}}
+                    aria-expanded={isInfoOpen}
+                    aria-controls="Flow Rate"></button></div>
+          <div style = {{display: "flex", alignItems: "center", gap: "82px"}}>
+          {parameterList[19]} <button className='info-btn' onClick={() => {handleOpenInfo(19)}}
+                    aria-expanded={isInfoOpen}
+                    aria-controls="Nozzle Angle"></button></div>
+          <div style = {{display: "flex", alignItems: "center", gap: "15px"}}>
+          {parameterList[6]} <button className='info-btn' onClick={() => {handleOpenInfo(6)}}
+                      aria-expanded={isInfoOpen}
+                      aria-controls="Nozzle Height"></button></div>
+          <div style = {{display: "flex", alignItems: "center", gap: "17px"}}>
+          {parameterList[5]} <button className='info-btn' onClick={() => {handleOpenInfo(5)}}
+                    aria-expanded={isInfoOpen}
+                    aria-controls="Nozzle Spacing"></button></div>
+          <div style = {{display: "flex", alignItems: "center", gap: "8px"}}>
+          {parameterList[7]} <button className='info-btn' onClick={() => {handleOpenInfo(7)}}                    
+                    aria-expanded={isInfoOpen}
+                    aria-controls="Nozzle Count"></button></div>
+          <p>Nozzle Overlap Percentage: {overlap.toFixed(0)}%</p>
+          <div style = {{display: "flex", alignItems: "center", gap: "15px"}}>
+          {parameterList[1]} <button className='info-btn' onClick={() => {handleOpenInfo(1)}}
+                    aria-expanded={isInfoOpen}
+                    aria-controls="Fluid Pressure"></button></div>
+          <p>Projected Flow Rate: {estimatedFlowrate.toFixed(3)} gal/min</p>
+          <div style = {{display: "flex", alignItems: "center", gap: "35px"}}>
+          {parameterList[25]} <button className='info-btn' onClick={() => {handleOpenInfo(25)}}
+                    aria-expanded={isInfoOpen}
+                    aria-controls="Twist Angle"></button></div>
+          <div style = {{display: "flex", alignItems: "center", gap: "36px"}}>
+          {parameterList[24]} <button className='info-btn' onClick={() => {handleOpenInfo(24)}}
+                    aria-expanded={isInfoOpen}
+                    aria-controls="Spray Shape"></button></div>
         </NozzleDrawer>
 
         {/* LINE DRAWER */}

@@ -51,7 +51,6 @@ def api_get_users():
 @api_v1.route('/users/<int:user_id>/')
 def api_get_user_projects(user_id):
     user = get_user_by_id(user_id)
-    del user['pass_hash']
     return jsonify({
         "retrieved": datetime.now(timezone.utc).isoformat(),
 		"user": user
@@ -66,7 +65,6 @@ def api_post_new_project(user_id):
         user = overwrite_existing_project(user_id, project['data'])
     else:
         user = save_new_project(user_id, project['data'])
-    del user['pass_hash']
     return jsonify({
         "retrieved": datetime.now(timezone.utc).isoformat(),
 		"user": user
