@@ -180,7 +180,8 @@ import '../styles/Modals.css';
             </button>    
             <div id="save_modal_content" className= "modalContent">              
             <button id = "saves_save_button_save" className = "saves_save_button" onClick={() => save()}>Save Project</button>
-            <button id = "saves_save_button_new" className = "saves_save_button">Create New Project</button>
+            <button id = "saves_save_button_copy" className = "saves_save_button" onClick={() => save()}>Save as Copy</button>
+            <button id = "saves_save_button_new" className = "saves_save_button" onClick={() => setIsWizardOpen(true)}>Create New Project</button>
             <p id = "saves_sign_in_message" hidden>Please Sign in to Save Projects!</p>
               <div id = 'saves_container'>
                 <h3>My Saved Projects:</h3>

@@ -310,3 +310,16 @@ export function encodeHTML(str: string): string{
     });
 }
 
+export function decodeHTML(str: string): string{
+    return str.replace(/[&<>"']/g, (match) => {
+        switch (match) {
+            case '&amp;': return '&';
+            case '&lt;': return '<';
+            case '&gt;': return '>';
+            case '&quot;': return '"';
+            case "&#39;": return "'";
+            default: return match;
+        }
+    });
+}
+

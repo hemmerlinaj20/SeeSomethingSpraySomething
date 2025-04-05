@@ -15,7 +15,7 @@ let paraNames: string[] = [
   "Product Height", "Product Length", "Product Width", 
   "Project Description", "Project ID", "Project Name",
   "Sensor Distance", "Spray Duration", "Start Delay", "Stop Delay", "Angle", "Flow Rate",
-  "Nozz Doc Link",  "Nozzle ID", "Nozzle Name", "Spray Angle", "Allignment",
+  "Nozz Doc Link",  "Nozzle ID", "Nozzle Name", "Spray Shape", "Allignment",
   "Controller Doc Link", "Controller ID", "Controller Name", "Gun Id", "Gun Name", "Max Frequency", "Overlap Distance"
 ]
 
@@ -44,7 +44,7 @@ const paramDesc: string[] = [
   "A link to the Spraying Systems catalog containing information on this nozzle", 
   "The numerical representation of a nozzle",
   "Text identifier of the nozzle",
-  "In degrees the angle of liquid spray exiting a nozzle",
+  "The shape in which liquid will spray from the nozzle (ex. Fan, cone, etc)",
   "In degrees the amount of tilt the nozzle head has in comparison to the conveyor belt",
   "A link to the Spraying Systems catalog containing information on this controller",
   "The numerical representation of a controller",

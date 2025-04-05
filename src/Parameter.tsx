@@ -65,11 +65,11 @@ export const paraNames: string[] = [
   ]
 
   export const nozzleIndex: number[] = [
-    24, 5, 6, 7, 20
+    5, 6, 7, 20, 1, 19
   ]
 
   export const nozzleSpacing: number[] = [
-    82, 15, 15, 50
+    15, 15, 50, 50, 50
   ]
 
   export const lineIndex: number[] = [

@@ -207,10 +207,10 @@ export default function App({parameters, projectState, userIDstate}: AppProps) {
           <li id={"ANGLEARRAY_list"} key={"ANGLEARRAY"}>
               <p>{"SPRAY ANGLE"}</p>
         <Dropdown options={sprayAngleOptions} onChange={(value) => {setSelectedNozzle(value); 
-          const SprayAngleParam = parameterMap.get("angle");
+          const SprayAngleParam = parameterMap.get("spray_angle");
           if (typeof SprayAngleParam !== "undefined"){
           SprayAngleParam.value = value;
-          setParameterMap(parameterMap.set("angle", SprayAngleParam))}}}/>
+          setParameterMap(parameterMap.set("spray_angle", SprayAngleParam))}}}/>
           </li>)
 
         parameterList.push(        
@@ -362,7 +362,7 @@ export default function App({parameters, projectState, userIDstate}: AppProps) {
         <NozzleDrawer isOpen={isNozzleDrawerOpen} onClose={() => setIsNozzleDrawerOpen(false)}>
 
         <div style = {{display: "flex", alignItems: "center"}}>
-          {parameterList[32]} {paraUnits[33]} <button className='info-btn' onClick={() => {handleOpenInfo(19)}}                    
+          {parameterList[33]} {paraUnits[33]} <button className='info-btn' onClick={() => {handleOpenInfo(19)}}                    
                     aria-expanded={isInfoOpen}
                     aria-controls="Spray Angle"></button></div>
         <div>
@@ -372,11 +372,6 @@ export default function App({parameters, projectState, userIDstate}: AppProps) {
             />
           ))}
           </div>
-          <Parameter key = {1} parameterList= {parameterList} paramUnits = {paraUnits} 
-            isInfoOpen = {isInfoOpen} handleOpenInfo = {handleOpenInfo} index = {1} />
-
-          <Parameter key = {19} parameterList= {parameterList} paramUnits = {paraUnits} 
-            isInfoOpen = {isInfoOpen} handleOpenInfo = {handleOpenInfo} index = {19} />
                       
           <p>NOZZLE OVERLAP PERCENTAGE: {(nozzleCount > 1) ? `${overlap.toFixed(0)}%` : "N/A"}</p>
 
