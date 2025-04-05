@@ -36,12 +36,12 @@ def login():
 
     uid = account_exists(username)
     if uid == None:
-        return f"No user exists with username {username}", 400
+        return f"username: {username} and password: {password} do not specify a valid account", 401
     
     user_map = get_user_by_id_with_pass(uid)
 
     if not global_hasher.check_password(password, user_map["pass_hash"]):
-        return f"Incorrect password for user: {username}"
+        return f"username: {username} and password: {password} do not specify a valid account", 401
     else:
         session["uid"] = uid
         

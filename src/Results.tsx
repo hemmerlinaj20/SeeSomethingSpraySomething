@@ -51,20 +51,21 @@ const Results = ({params, timingMode}:ResultsProps) => {
     //find the most dense part of the spray pattern
     let maxSpray = 0;
 
-    let totalSprayGallons = 0;
-    const patternArea = patternLength * patternWidth;
-    const pixelAreaInches = patternArea / (widthElements * lengthElements)
+    //graveyard code for calculating total volume applied
+    //let totalSprayGallons = 0;
+    //const patternArea = patternLength * patternWidth;
+    //const pixelAreaInches = patternArea / (widthElements * lengthElements)
 
     for (const col of productAspray){
         for(const element of col){
             const thisDensity = element.getElementSprayDensity();
-            totalSprayGallons = totalSprayGallons + (thisDensity * pixelAreaInches);
+            //totalSprayGallons = totalSprayGallons + (thisDensity * pixelAreaInches);
             if (thisDensity > maxSpray){
                 maxSpray = thisDensity;
             }
         }
     }
-    console.log(`total volume applied was ${totalSprayGallons}`);
+    //console.log(`total volume applied was ${totalSprayGallons}`);
 
     //detect product edges
     for(let colI = 1; colI < productAspray.length-1; colI++ ){

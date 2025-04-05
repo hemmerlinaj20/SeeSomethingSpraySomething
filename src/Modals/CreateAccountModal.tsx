@@ -1,12 +1,21 @@
 import { useState } from "react";
 import { RiCloseLine } from "react-icons/ri";
-import { createAccount } from "../utility/auth_requests.ts";
+import { createAccount, UserInfoResponse } from "../utility/auth_requests.ts";
 import { AccountModalProps } from './ModalInterfaces';
 import { TextField } from './ModalUtil.tsx';
-import { encodeHTML } from "../utility/ProjectUtilities";
 import '../styles/Modals.css';
 
-export const CreateAccount = ({ isOpen, setIsLIOpen, setIsCAOpen, setUserInfo }: AccountModalProps) => {
+async function handleAccountCreation(username:string, email:string, password:string, setUserInfo:(x:Promise<UserInfoResponse>)=>void, setFailedOpen:(x:boolean)=>void){
+  const response = createAccount(username, password, email);
+  setUserInfo(response);
+
+  const responseData = await response;
+
+  //if we tried and failed to create an account, let the user know
+  setFailedOpen(responseData.uid === 1);
+}
+
+export const CreateAccount = ({ isOpen, setIsLIOpen, setIsCAOpen, setUserInfo, setFailedOpen }: AccountModalProps) => {
   const [username, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
@@ -25,7 +34,7 @@ export const CreateAccount = ({ isOpen, setIsLIOpen, setIsCAOpen, setUserInfo }:
     <>
       <div className= "darkBG" onClick={() => setIsCAOpen(false)} />
       <div className= "centered">
-        <div className= "modal createAccount">
+        <div className= "modal">
           <button className= "closeBtn" onClick={() => setIsCAOpen(false)}>
             <RiCloseLine style={{ marginBottom: "-3px" }} />
           </button>
@@ -33,7 +42,7 @@ export const CreateAccount = ({ isOpen, setIsLIOpen, setIsCAOpen, setUserInfo }:
           <button className= "loginSwitchBtn" onClick={() => {setIsLIOpen(true); setIsCAOpen(false)}}>
                 Log In
           </button>
-          <button className= "createSwitchBtn">
+          <button className= "onCreateSwitchBtn">
                 Create Account
           </button>
           </div>
@@ -54,7 +63,7 @@ export const CreateAccount = ({ isOpen, setIsLIOpen, setIsCAOpen, setUserInfo }:
             <div>
               </div>
               <div>
-              <button className= "loginBtn" onClick={() => { setIsCAOpen(false)}}>
+              <button className= "loginBtn" onClick={() => {handleAccountCreation(username, email, password, setUserInfo, setFailedOpen); setIsCAOpen(false)}}>
                 Create
               </button>
               </div>

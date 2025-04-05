@@ -38,6 +38,7 @@ export interface AccountModalProps{
   setIsCAOpen: (arg0: boolean) => void;
   setIsFPOpen: (arg0: boolean) => void;
   setUserInfo: (arg: Promise<UserInfoResponse>) => void;
+  setFailedOpen: (open:boolean)=>void;
 }
 
 export interface InfoModalProps{
@@ -70,4 +71,8 @@ export interface DropdownProps {
 export interface ResultsHelpProps{
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+}
+
+export interface AuthFailedProps extends ModalProps{
+  setParentOpen: (open: boolean) => void;
 }

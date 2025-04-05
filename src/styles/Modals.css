@@ -101,6 +101,12 @@
   z-index: 4;
 }
 
+.auth-message-modal{
+  width: 30vw;
+  height: 25vh; 
+  text-align: center; 
+}
+
 @media (max-width: 1000px) {
   .saveLoad {
     width: 70vw;

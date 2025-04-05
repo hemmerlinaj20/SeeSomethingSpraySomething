@@ -126,7 +126,7 @@ export function updateParams(parameterMap:Map<String, UtilityInterfaces.Paramete
     let new_start_delay = parameterMap.get("start_delay");
     let new_stop_delay = parameterMap.get("stop_delay");
     let new_spray_duration = parameterMap.get("spray_duration");
-    console.log("timing mode: " + timingMode);
+
     if(typeof new_start_delay !== "undefined"){
         //this is simple, because t=0 is when the sensor is triggered
         GlobalParams.SPRAY_START_TIME = Number(new_start_delay.value);
@@ -146,11 +146,11 @@ export function updateParams(parameterMap:Map<String, UtilityInterfaces.Paramete
 
     //if there was an error receiving or setting timing modes, default to automatic timing
     if(GlobalParams.SPRAY_DURATION.toFixed(2) !== (GlobalParams.SPRAY_END_TIME - GlobalParams.SPRAY_START_TIME).toFixed(2)){
-        console.error(`TIMING MODE ENTRY ERROR - given values don't match:\nstart time: ${GlobalParams.SPRAY_START_TIME}\nend time: ${GlobalParams.SPRAY_END_TIME}\nduration: ${GlobalParams.SPRAY_DURATION}\n\ndefaulting to automatic timing.`)
+        //console.error(`TIMING MODE ENTRY ERROR - given values don't match:\nstart time: ${GlobalParams.SPRAY_START_TIME}\nend time: ${GlobalParams.SPRAY_END_TIME}\nduration: ${GlobalParams.SPRAY_DURATION}\n\ndefaulting to automatic timing.`)
         GlobalParams.SPRAY_START_TIME = GlobalParams.SENSOR_DISTANCE / GlobalParams.LINE_SPEED - 0.01; //start just before the product arrives
         GlobalParams.SPRAY_DURATION = GlobalParams.PRODUCT_LENGTH / GlobalParams.LINE_SPEED;
         GlobalParams.SPRAY_END_TIME = GlobalParams.SPRAY_START_TIME + GlobalParams.SPRAY_DURATION + 0.02;
-        console.log(`Auto starting at ${GlobalParams.SPRAY_START_TIME}\nAuto-ending at ${GlobalParams.SPRAY_END_TIME}`); //end just after the product passes
+        //console.log(`Auto starting at ${GlobalParams.SPRAY_START_TIME}\nAuto-ending at ${GlobalParams.SPRAY_END_TIME}`); //end just after the product passes
     }
 
     GlobalParams.VIRTUAL_LINE_LENGTH = 1.2 * GlobalParams.LINE_SPEED * GlobalParams.SPRAY_DURATION;
