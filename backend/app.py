@@ -13,5 +13,4 @@ if __name__ == "__main__":
 
 #keep everything after this
     app.config['DEBUG'] = True
-    app.run()
 

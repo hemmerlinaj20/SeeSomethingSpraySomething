@@ -12,10 +12,8 @@ from authentication.auth_routes import auth_v1
 from flask_mail import Mail, Message
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='../dist', static_url_path='/')
     
-
-    app = Flask(__name__)
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
     app.config['MAIL_PORT'] = 465
     app.config['MAIL_USE_SSL'] = True
@@ -30,5 +28,9 @@ def create_app():
     session_key_file = open("./authentication/session_key.txt", "r")
     app.config['SECRET_KEY'] = session_key_file.read()
     session_key_file.close()
+
+    @app.route('/')
+    def index():
+        return app.send_static_file('index.html')
 
     return app
