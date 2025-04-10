@@ -5,7 +5,7 @@ For Development:
 (Not sure if you actually need to do all these, check without if you can
 so we know what to delete from here)
 
-- pip install cors, flask, pymongo, flask-pymongo
+- pip install cors, flask, pymongo=4.10.1, flask-pymongo==2.3.0
 - python -m pip install --upgrade pip bcrypt argon2-cffi passlib cryptography
 
 From the main folder, 
