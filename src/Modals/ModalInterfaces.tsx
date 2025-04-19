@@ -31,6 +31,7 @@ export interface SaveLoadProps{
   parameterMap: Map<string, UtilityInterfaces.Parameter>;
   onLoad: (arg0: Map<string, UtilityInterfaces.Parameter>) => void;
   userIDstate : [number, React.Dispatch<React.SetStateAction<number>>];
+  setIsLoading : React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface WizardProps{
@@ -41,6 +42,7 @@ export interface WizardProps{
   projectState : [Models.ProjectBase[], React.Dispatch<React.SetStateAction<Models.ProjectBase[]>>];
   parameterMap: Map<string, UtilityInterfaces.Parameter>;
   userIDstate : [number, React.Dispatch<React.SetStateAction<number>>];
+  setIsLoading : React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface AccountModalProps{

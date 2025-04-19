@@ -26,7 +26,7 @@ export function overlapPercentage(product_to_nozzle:number, nozzle_spacing:numbe
 
     const overlap = (widthAfterTwist - nozzle_spacing) / widthAfterTwist;
 
-    if(overlap < 0){
+    if(overlap < 0 || product_to_nozzle < 0){
         return 0;
     }
 

@@ -6,11 +6,11 @@ export const Loading = ({isOpen, setIsOpen, setBG}: LoadingProps) => {
     return (
         <>
         {setBG == true &&
-        <div className= "loadingdarkBG" onClick={() => setIsOpen(false)} />
+        <div className= "loadingdarkBG"/>
         }
             <div className="loadingCentered centered">
                 <div className="loader"></div>
-                <h4>Spraying....</h4>
+                <h4>Loading....</h4>
             </div>
         </>
     );

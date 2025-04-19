@@ -6,16 +6,14 @@ import { listUserProjects} from "../utility/ProjectUtilities";
 import { createProjectMap} from "../utility/ProjectUtilities";
 import { SaveLoadProps } from "./ModalInterfaces";
 import { getLatestProjectID } from "../utility/ProjectUtilities";
-import { Loading } from "./LoadingModal";
 import { TextBox } from "./TextBoxModal";
 import '../styles/Modals.css';
 
 
-  export const SaveLoad = ({ isOpen, setIsOpen, setIsWizardOpen, projectState, parameterMap, onLoad, userIDstate}: SaveLoadProps) => {
+  export const SaveLoad = ({ isOpen, setIsOpen, setIsWizardOpen, setIsLoading, projectState, parameterMap, onLoad, userIDstate}: SaveLoadProps) => {
     const [selectedButton, setSelectedButton] = useState(-1);
     const [projects, setProjects] = projectState;
     const [projectList, setProjectList] = useState(constructProjectList());
-    const [isLoading, setIsLoading] = useState(false);
     const [userID] = userIDstate;
     const [isTextBoxOpen, setTextBoxOpen] = useState(false);
     const [isDescriptionTextBoxOpen, setDescriptionTextBoxOpen] = useState(false);
@@ -200,7 +198,6 @@ import '../styles/Modals.css';
         <div className= "darkBG" onClick={() => setIsOpen(false)} />
         <div className= "centered">
           <div className= "modal saveLoad">
-          {isLoading && <Loading isOpen={isLoading} setIsOpen={setIsLoading} setBG={false}/>} 
             <div className= "save_load_header">
               <h2 className= "heading">Currently Open: {projectName}</h2>
               <button id="rename_project" className="saves_save_button" onClick={() => {setTextBoxOpen(true)}}>Rename</button>

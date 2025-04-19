@@ -6,16 +6,14 @@ import { listUserProjects} from "../utility/ProjectUtilities";
 import { createProjectMap} from "../utility/ProjectUtilities";
 import { WizardProps } from "./ModalInterfaces";
 import { Dropdown } from './ModalUtil.tsx';
-import { Loading } from "./LoadingModal";
 import { sprayAngleOptions, nozzleNumberOptions } from '../Parameter.tsx';
 import '../styles/Modals.css';
 import { updateParamsAndRerender } from "../utility/updateParamsAndRerender.ts";
 
-  export const Wizard = ({ isOpen, setIsOpen, setIsSaveLoadOpen, updateMap, projectState, parameterMap, userIDstate}: WizardProps) => {
+  export const Wizard = ({ isOpen, setIsOpen, setIsSaveLoadOpen, setIsLoading, updateMap, projectState, parameterMap, userIDstate}: WizardProps) => {
     const [selectedNozzleNum, setSelectedNozzleNum] = useState<string>("1");
     const [selectedSprayAngle, setSelectedSprayAngle] = useState<string>("110");
     const [_projects, setProjects] = projectState;
-    const [isLoading, setIsLoading] = useState(false);
     const [userID] = userIDstate;
     const [imagesrc, setImageSrc] = useState<string>("");
 
@@ -62,8 +60,8 @@ import { updateParamsAndRerender } from "../utility/updateParamsAndRerender.ts";
       await saveProject(userID, parameterMap, true); 
       setProjects(await listUserProjects(userID));
       updateParamsAndRerender(parameterMap, updateMap)
-      setIsLoading(false);
       setIsOpen(false);
+      setIsLoading(false);
   }
     
     if (!isOpen){ return null}
@@ -77,7 +75,6 @@ import { updateParamsAndRerender } from "../utility/updateParamsAndRerender.ts";
         <div className= "darkBG" onClick={() => setIsOpen(false)} />
           <div className= "centered">
             <div className= "modal">
-            {isLoading && <Loading isOpen={isLoading} setIsOpen={setIsLoading} setBG={false}/>} 
               <div className= "modalHeader">
                 <h2 className= "heading">Project Template</h2>
               </div>
